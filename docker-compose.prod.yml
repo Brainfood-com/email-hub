@@ -1,0 +1,48 @@
+version: '3.4'
+
+volumes:
+  home:
+
+networks:
+  default:
+  nginx:
+    external:
+      name: nginx
+
+x-logging: &_logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "10"
+
+x-postfix: &_postfix-base
+  build:
+    args:
+      - http_proxy
+    context: .
+    dockerfile: Dockerfile.postfix
+    network: localdev_default
+  cap_add:
+    - SYS_PTRACE
+  domainname: localdev
+  image: localdev-postfix
+  logging:
+    <<: *_logging
+  restart: always
+
+services:
+  postfix-prod:
+    <<: *_postfix-base
+    networks:
+      default:
+        aliases:
+          - smtp
+          - mail # for ssmtp
+    volumes:
+      - type: volume
+        source: home
+        target: /home
+        volume:
+          nocopy: false
+
+

@@ -1,0 +1,16 @@
+FROM debian:stretch-slim
+
+COPY dovecot.conf /etc/dovecot/conf.d/99-docker.conf
+RUN apt-get update \
+	&& apt-get install -y ssmtp dovecot-sqlite dovecot-imapd \
+	&& addgroup hostgroup \
+	&& adduser --gecos 'Host User' --ingroup hostgroup --disabled-password hostuser \
+	&& find /var/cache/apt /var/lib/apt -type f -delete \
+	&& true
+
+COPY entrypoint-dovecot /sbin/entrypoint
+
+EXPOSE 143
+ENTRYPOINT ["/sbin/entrypoint"]
+CMD ["/usr/sbin/dovecot", "-F"]
+
